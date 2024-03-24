@@ -8,8 +8,6 @@ import { Repository } from 'typeorm';
 @Injectable()
 export class ProductsService {
   
-  
-  
   private readonly logger = new Logger('ProductsService');
   
   constructor(
@@ -25,6 +23,22 @@ export class ProductsService {
   async create(createProductDto: CreateProductDto) {
     try {
       
+      //Validar que exista un slug y formatearlo 
+      //segun se quiera en el string
+      //se pueden hacer triggers de DB en el entity
+
+      //if(!createProductDto.slug){
+      //  createProductDto.slug = createProductDto.title
+      //  .toLowerCase()
+      //  .replaceAll(' ','_')
+      //  .replaceAll("'",'')
+      //} else{
+      //  createProductDto.slug = createProductDto.slug
+      //  .toLowerCase()
+      //  .replaceAll(' ','_')
+      //  .replaceAll("'",'')
+      //}
+
       const product = this.productRepository.create(createProductDto)
       await this.productRepository.save(product);
 
