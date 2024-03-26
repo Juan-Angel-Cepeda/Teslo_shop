@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
 import { Repository } from 'typeorm';
 import { isNumber, isUUID } from 'class-validator';
+import { PaginationDto } from '../common/dtos/paginations.dto';
 
 @Injectable()
 export class ProductsService {
@@ -23,22 +24,6 @@ export class ProductsService {
   
   async create(createProductDto: CreateProductDto) {
     try {
-      
-      //Validar que exista un slug y formatearlo 
-      //segun se quiera en el string
-      //se pueden hacer triggers de DB en el entity
-
-      //if(!createProductDto.slug){
-      //  createProductDto.slug = createProductDto.title
-      //  .toLowerCase()
-      //  .replaceAll(' ','_')
-      //  .replaceAll("'",'')
-      //} else{
-      //  createProductDto.slug = createProductDto.slug
-      //  .toLowerCase()
-      //  .replaceAll(' ','_')
-      //  .replaceAll("'",'')
-      //}
 
       const product = this.productRepository.create(createProductDto)
       await this.productRepository.save(product);
@@ -50,29 +35,34 @@ export class ProductsService {
     }
   }
 
-  async findAll() {
-    return await this.productRepository.find({});
+  async findAll(paginationDto:PaginationDto) {
+    const { limit = 10, offset = 0 } =  paginationDto;
+    return await this.productRepository.find({
+      take:limit,
+      skip:offset,
+      //TO-DO: relaciones
+    });
   }
 
   async findOne(term:string) {
+    
     let product:Product;
-
     //Buscar por ID
     if (isUUID(term)){
       product = await this.productRepository.findOneBy({id:term});
     }
 
-    //Buscar por slug
-    if (!product) {
-      term = term.toLowerCase()
-      product = await this.productRepository.findOneBy({slug:term});
+    //Buscar por Slug o por Title
+    else{
+      const queryBuilder = this.productRepository.createQueryBuilder();
+      product = await queryBuilder
+      .where('UPPER(title) =:title or slug =:slug',{
+        title:term.toUpperCase(),
+        slug:term.toLowerCase()
+      }).getOne();
     }
-
-    //buscar por precio
-    if(isNumber(+term)){
-      product = await this.productRepository.findOneBy({price:+term});
-    }
-
+    
+    //Exepcion de no encontrado
     if (!product){
       throw new NotFoundException('Product not found in databse');
     }
@@ -80,8 +70,18 @@ export class ProductsService {
 
   }
 
-  update(id: number, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`;
+  async update(id:string, updateProductDto: UpdateProductDto) {
+    
+    const product = await this.productRepository.preload({
+      id:id,
+      ...updateProductDto
+    });
+
+    if (!product ) throw new NotFoundException(`Product with id ${id} not found`);
+    
+    await this.productRepository.save(product);
+    return product;
+
   }
 
   async remove(id: string) {
