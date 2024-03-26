@@ -53,6 +53,6 @@ export class Product {
         .replaceAll(' ','_')
         .replaceAll("'",'')   
     }
-
+    
     //@BeforeUpdate
 }
