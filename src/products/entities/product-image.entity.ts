@@ -3,7 +3,7 @@ import { Column, Entity,
 import { Product } from "./product.entity";
 
 
-@Entity()
+@Entity({name:'product_images'})
 export class ProductImage{
     @PrimaryGeneratedColumn()
     id: number;
