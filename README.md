@@ -14,5 +14,7 @@
 5. Levantar la base de datos
 ```docker compose up -d```
 
+6. Ejecutar Seed
+``` Ejecutar un get a api/seed```
 
 6. Levantar el proyecto en modo desarrollo: ```yarn start:dev ```
