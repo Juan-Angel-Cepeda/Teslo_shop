@@ -9,11 +9,16 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { fileFilter } from './helpers/fileFilter.helper';
 
 import { fileNamer } from './helpers/fileNamer.helper';
+import { ConfigService } from '@nestjs/config';
 
 
 @Controller('files')
 export class FilesController {
-  constructor(private readonly filesService: FilesService) {}
+  constructor(
+    private readonly filesService: FilesService,
+    private readonly configService: ConfigService
+
+  ){}
 
   @Get('product/:imageName')
   findOneProductImage(
@@ -46,9 +51,8 @@ export class FilesController {
       throw new BadRequestException('Please upload an image, Accepted files: jpg, png, jpeg, gif');
     }
 
-    const secureUrl = `${file.filename}`
-    return{
-      secureUrl
-    };
+    const secureUrl = `${this.configService.get('HOST_API')}/files/product/${file.filename}`
+    return{secureUrl};
+
   }
 }

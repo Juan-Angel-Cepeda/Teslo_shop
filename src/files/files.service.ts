@@ -3,8 +3,6 @@ import { existsSync } from 'fs';
 
 import { BadRequestException, Injectable } from '@nestjs/common';
 
-
-
 @Injectable()
 export class FilesService {
 
@@ -15,7 +13,6 @@ export class FilesService {
     }
     return path;
   }
-
 }
 
 
