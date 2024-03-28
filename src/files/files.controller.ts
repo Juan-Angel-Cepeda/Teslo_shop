@@ -1,7 +1,10 @@
-import { BadRequestException, Controller, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Controller, Post, 
+         UploadedFile, UseInterceptors, Get, 
+         Param, Res} from '@nestjs/common';
+
 import { FilesService } from './files.service';
 import { diskStorage } from 'multer';
-
+import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { fileFilter } from './helpers/fileFilter.helper';
 
@@ -12,6 +15,15 @@ import { fileNamer } from './helpers/fileNamer.helper';
 export class FilesController {
   constructor(private readonly filesService: FilesService) {}
 
+  @Get('product/:imageName')
+  findOneProductImage(
+    @Res() res:Response,
+    @Param('imageName') imageName:string
+  ){
+    const path = this.filesService.getStaticProductImage(imageName);
+    res.sendFile(path);
+  }
+
   @Post('product')
   @UseInterceptors( FileInterceptor('file',{
     fileFilter:fileFilter,
@@ -21,7 +33,7 @@ export class FilesController {
       destination:'./static/uploads',
       filename:fileNamer
     })
-  }) )
+  }))
   uploadProductImage(
     @UploadedFile() file:Express.Multer.File,
   ){
@@ -34,9 +46,9 @@ export class FilesController {
       throw new BadRequestException('Please upload an image, Accepted files: jpg, png, jpeg, gif');
     }
 
-    console.log(file)
+    const secureUrl = `${file.filename}`
     return{
-      fileName:file.originalname
+      secureUrl
     };
   }
 }
