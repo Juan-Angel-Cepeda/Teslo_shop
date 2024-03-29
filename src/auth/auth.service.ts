@@ -33,9 +33,8 @@ export class AuthService {
       
       return {
         ...user,
-        token:this.getJwtToken({email:user.email})
+        token:this.getJwtToken({id:user.id})
       }
-      //TODO: Retornar el JWT de acceso
 
     }catch(error){
       this.handeDBErrors(error);
@@ -47,7 +46,7 @@ export class AuthService {
     const { password, email } = loginUserDto;
     const dbUser = await this.userRepository.findOne({
       where:{email},
-      select:{email:true,password:true}
+      select:{email:true,password:true,id:true}
     });
 
     if(!dbUser){
@@ -60,7 +59,7 @@ export class AuthService {
     
     return {
       ...dbUser,
-      token:this.getJwtToken({email:dbUser.email})
+      token:this.getJwtToken({id:dbUser.id})
     };
   }
 
