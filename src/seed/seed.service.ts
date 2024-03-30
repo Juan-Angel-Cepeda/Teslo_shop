@@ -1,31 +1,62 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Query } from '@nestjs/common';
 import { ProductsService } from 'src/products/products.service';
 import { initialData } from './data/seed-data';
+import { InjectRepository } from '@nestjs/typeorm';
+import { User } from '../auth/entities/user.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class SeedService {
 
   constructor(
-    private readonly productService: ProductsService
-    ) 
-    {}
+    private readonly productService: ProductsService,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>
+    ){}
 
-  runSeed() {
-    this.insertProducts();
+  async runSeed() {
+    await this.deleteAllTables();
+    const secondUser = await this.insertUsers();
+    await this.insertProducts(secondUser);
+
     return `Seed Excecuted`;
 
   }
 
-  private async insertProducts() {
+  private async deleteAllTables(){
+    
+    await this.productService.deleteAllProducts();
+    const queryBuilder = this.userRepository.createQueryBuilder();
+    await queryBuilder
+    .delete()
+    .where({})
+    .execute()
+
+  }
+
+  private async insertUsers(){
+    const seedUsers = initialData.users;
+    const users:User[] = [];
+
+    seedUsers.forEach(user => {
+      users.push(this.userRepository.create(user))
+    });
+
+    await this.userRepository.save(users);
+    return users[1];
+  }
+
+
+  private async insertProducts( user:User) {
     await this.productService.deleteAllProducts();
     
     const proudcts = initialData.products;
-    
     const insertPromises = [];
 
     proudcts.forEach(product => {
-      insertPromises.push(this.productService.create( product ));
+      insertPromises.push(this.productService.create( product, user ));
     })    
+    
     await Promise.all(insertPromises);
     return true;
   }
