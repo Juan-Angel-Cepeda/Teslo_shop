@@ -14,8 +14,7 @@ export class CreateProductDto {
     @IsString()
     @MinLength(1)
     title:string; 
-
-    
+   
     @ApiProperty()
     @IsNumber()
     @IsPositive()
