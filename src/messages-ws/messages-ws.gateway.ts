@@ -1,6 +1,7 @@
-import { OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import { OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { MessagesWsService } from './messages-ws.service';
 import { Server, Socket } from 'socket.io';
+import { NewMessageDto } from './dtos/new-message.dto';
 
 @WebSocketGateway({cors:true})
 export class MessagesWsGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -19,4 +20,11 @@ export class MessagesWsGateway implements OnGatewayConnection, OnGatewayDisconne
     this.messagesWsService.removeClient(client.id);
     this.wss.emit('clients-updated',this.messagesWsService.getConnectedClients());
   }
+
+  //message-from-client
+  @SubscribeMessage('message-from-client')
+  handleMessageFromClient(client:Socket,payload:NewMessageDto){
+    console.log(client.id,payload)
+  }
+
 }
