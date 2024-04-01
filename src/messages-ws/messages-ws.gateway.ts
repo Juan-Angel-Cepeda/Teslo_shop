@@ -2,16 +2,34 @@ import { OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGa
 import { MessagesWsService } from './messages-ws.service';
 import { Server, Socket } from 'socket.io';
 import { NewMessageDto } from './dtos/new-message.dto';
+import { JwtService } from '@nestjs/jwt';
+import { diskStorage } from 'multer';
+import { JwtPayload } from 'src/auth/interfaces';
 
 @WebSocketGateway({cors:true})
 export class MessagesWsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @WebSocketServer() wss:Server
-  constructor(private readonly messagesWsService: MessagesWsService){}
+  constructor(
+    private readonly messagesWsService: MessagesWsService,
+    private readonly jwtService: JwtService
+    ){}
   
-  handleConnection(client: Socket) {
+  async handleConnection(client: Socket) {
+    
+    const token = client.handshake.headers.authentication as string;
+    let payload:JwtPayload
+    try{
+      payload = this.jwtService.verify(token);
+      await this.messagesWsService.registerClient(client,payload.id);
+    
+    }catch(error){
+      client.disconnect();
+      return;
+    }
+    
+    //console.log({payload})
     //console.log('Cliente conectado', client.id)
-    this.messagesWsService.registerClient(client);
     this.wss.emit('clients-updated',this.messagesWsService.getConnectedClients());
   }
   
@@ -24,7 +42,23 @@ export class MessagesWsGateway implements OnGatewayConnection, OnGatewayDisconne
   //message-from-client
   @SubscribeMessage('message-from-client')
   handleMessageFromClient(client:Socket,payload:NewMessageDto){
-    console.log(client.id,payload)
+    
+    //message-from-server
+
+    //! Emite unicamente al cliente que mando el mensaje
+
+    //client.emit('message-from-server',{
+    //  fullName:'Soy el Servidor',
+    //  message:`Esto dijo mi cliente desde el servidor: ${payload.message}` || 'no-message!!'
+    //});
+
+
+    //!Emitir a todos menos al cliente inicial
+    client.broadcast.emit('message-from-server',{
+      fullName:this.messagesWsService.getUserFullName(client.id),
+      message:` ${payload.message}` || 'no-message!!'
+    });
   }
+
 
 }
