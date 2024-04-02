@@ -3,7 +3,6 @@ import { MessagesWsService } from './messages-ws.service';
 import { Server, Socket } from 'socket.io';
 import { NewMessageDto } from './dtos/new-message.dto';
 import { JwtService } from '@nestjs/jwt';
-import { diskStorage } from 'multer';
 import { JwtPayload } from 'src/auth/interfaces';
 
 @WebSocketGateway({cors:true})
@@ -59,6 +58,4 @@ export class MessagesWsGateway implements OnGatewayConnection, OnGatewayDisconne
       message:` ${payload.message}` || 'no-message!!'
     });
   }
-
-
 }
